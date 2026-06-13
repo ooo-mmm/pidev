@@ -1,0 +1,39 @@
+node_modules/
+results/
+.pi/
+.pi-lens/
+.claude/
+
+# Compiled JavaScript files (TypeScript source is what matters)
+*.mjs
+
+# BUT: keep extractor source files (they're native .mjs, not compiled)
+!extractors/*.mjs
+!bin/*.mjs
+!test.mjs
+!src/**/*.mjs
+!test/**/*.mjs
+!scripts/*.mjs
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temp files
+*.tmp
+*.temp
+
+# Analysis documents (local only)
+FEATURES.md
+assessment.md
+shortlist.md
+refactor.md
+docs/plans/
+nul
+
+# Local dev test file
+test_unit.mjs

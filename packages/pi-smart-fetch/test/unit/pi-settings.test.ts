@@ -1,0 +1,156 @@
+import { describe, expect, it } from "bun:test";
+import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import {
+  loadPiSmartFetchSettings,
+  resolvePiSmartFetchSettings,
+} from "../../src/settings";
+
+describe("resolvePiSmartFetchSettings", () => {
+  it("uses project settings over global settings for all supported defaults", () => {
+    const resolved = resolvePiSmartFetchSettings(
+      {
+        smartFetchVerboseByDefault: true,
+        smartFetchDefaultMaxChars: 1200,
+        smartFetchDefaultTimeoutMs: 15000,
+        smartFetchDefaultBrowser: "chrome_145",
+        smartFetchDefaultOs: "windows",
+        smartFetchDefaultRemoveImages: false,
+        smartFetchDefaultIncludeReplies: "extractors",
+        smartFetchDefaultBatchConcurrency: 8,
+        smartFetchTempDir: "/tmp/global-fetch",
+      },
+      {
+        smartFetchVerboseByDefault: false,
+        smartFetchDefaultMaxChars: 300,
+        smartFetchDefaultTimeoutMs: 5000,
+        smartFetchDefaultBrowser: "firefox_147",
+        smartFetchDefaultOs: "linux",
+        smartFetchDefaultRemoveImages: true,
+        smartFetchDefaultIncludeReplies: true,
+        smartFetchDefaultBatchConcurrency: 3,
+        smartFetchTempDir: "/tmp/project-fetch",
+      },
+    );
+
+    expect(resolved).toEqual({
+      verboseByDefault: false,
+      maxChars: 300,
+      timeoutMs: 5000,
+      browser: "firefox_147",
+      os: "linux",
+      removeImages: true,
+      includeReplies: true,
+      batchConcurrency: 3,
+      tempDir: "/tmp/project-fetch",
+    });
+  });
+
+  it("ignores invalid values and falls back to defaults", () => {
+    const resolved = resolvePiSmartFetchSettings(
+      {
+        smartFetchVerboseByDefault: "yes",
+        smartFetchDefaultMaxChars: -10,
+        smartFetchDefaultTimeoutMs: 0,
+        smartFetchDefaultBrowser: "",
+        smartFetchDefaultOs: "beos",
+        smartFetchDefaultRemoveImages: "no",
+        smartFetchDefaultIncludeReplies: "all",
+        smartFetchDefaultBatchConcurrency: 0,
+      },
+      {},
+    );
+
+    expect(resolved).toEqual({
+      verboseByDefault: false,
+      maxChars: undefined,
+      timeoutMs: undefined,
+      browser: undefined,
+      os: undefined,
+      removeImages: undefined,
+      includeReplies: undefined,
+      batchConcurrency: undefined,
+      tempDir: join(tmpdir(), "smart-fetch-pi"),
+    });
+  });
+
+  it("accepts legacy webFetch settings as a fallback alias", () => {
+    const resolved = resolvePiSmartFetchSettings(
+      {
+        webFetchVerboseByDefault: true,
+        webFetchDefaultMaxChars: 2000,
+        webFetchDefaultBatchConcurrency: 5,
+      },
+      {},
+    );
+
+    expect(resolved).toEqual({
+      verboseByDefault: true,
+      maxChars: 2000,
+      timeoutMs: undefined,
+      browser: undefined,
+      os: undefined,
+      removeImages: undefined,
+      includeReplies: undefined,
+      batchConcurrency: 5,
+      tempDir: join(tmpdir(), "smart-fetch-pi"),
+    });
+  });
+});
+
+describe("loadPiSmartFetchSettings", () => {
+  it("reads global and project pi settings files", async () => {
+    const baseDir = await mkdtemp(join(tmpdir(), "smart-fetch-pi-settings-"));
+    const agentDir = join(baseDir, "agent");
+    const cwd = join(baseDir, "project");
+
+    await mkdir(agentDir, { recursive: true });
+    await mkdir(join(cwd, ".pi"), { recursive: true });
+
+    await writeFile(
+      join(agentDir, "settings.json"),
+      JSON.stringify(
+        {
+          smartFetchVerboseByDefault: true,
+          smartFetchDefaultMaxChars: 2000,
+          smartFetchDefaultTimeoutMs: 9000,
+          smartFetchDefaultBrowser: "chrome_145",
+          smartFetchDefaultOs: "windows",
+          smartFetchDefaultRemoveImages: false,
+          smartFetchDefaultIncludeReplies: "extractors",
+          smartFetchDefaultBatchConcurrency: 8,
+          smartFetchTempDir: "/tmp/global-fetch",
+        },
+        null,
+        2,
+      ),
+    );
+    await writeFile(
+      join(cwd, ".pi", "settings.json"),
+      JSON.stringify(
+        {
+          smartFetchVerboseByDefault: false,
+          smartFetchDefaultBrowser: "firefox_147",
+          smartFetchDefaultRemoveImages: true,
+          smartFetchDefaultBatchConcurrency: 4,
+          smartFetchTempDir: "/tmp/project-fetch",
+        },
+        null,
+        2,
+      ),
+    );
+
+    expect(await loadPiSmartFetchSettings(cwd, agentDir)).toEqual({
+      verboseByDefault: false,
+      maxChars: 2000,
+      timeoutMs: 9000,
+      browser: "firefox_147",
+      os: "windows",
+      removeImages: true,
+      includeReplies: "extractors",
+      batchConcurrency: 4,
+      tempDir: "/tmp/project-fetch",
+    });
+  });
+});

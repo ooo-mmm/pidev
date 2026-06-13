@@ -1,0 +1,13 @@
+{
+  "name": "pi-finish-notification",
+  "version": "1.0.4",
+  "description": "Sends native macOS/terminal notifications with sound when pi coding agent finishes and your terminal isn't active. No config, no frills — just works.",
+  "keywords": ["pi-package", "pi", "notification", "macos", "terminal", "zero-config", "background"],
+  "license": "MIT",
+  "pi": {
+    "extensions": ["./extensions"]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
+  }
+}

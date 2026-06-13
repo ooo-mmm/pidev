@@ -1,0 +1,5 @@
+ignoreScripts: true
+strictDepBuilds: false
+minimumReleaseAge: 4320
+minimumReleaseAgeStrict: true
+blockExoticSubdeps: true
