@@ -15,5 +15,8 @@
     "@biomejs/biome": "^1.9.4",
     "typescript": "^5.6.0",
     "vitest": "^2.1.0"
+  },
+  "overrides": {
+    "tree-sitter-wasms": "npm:null@2.0.0"
   }
 }
