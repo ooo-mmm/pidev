@@ -12,7 +12,10 @@ afterAll(() => {
 	for (const c of cleanups) c();
 });
 
-async function rulesFiredOn(code: string): Promise<Set<string>> {
+async function rulesFiredOn(
+	code: string,
+	flags: Record<string, unknown> = {},
+): Promise<Set<string>> {
 	const env = setupTestEnvironment("pi-lens-sonar-sg-");
 	cleanups.push(env.cleanup);
 	const filePath = createTempFile(env.tmpDir, "sample.ts", code);
@@ -25,7 +28,7 @@ async function rulesFiredOn(code: string): Promise<Set<string>> {
 		cwd: env.tmpDir,
 		kind: "jsts",
 		fileRole: "source",
-		pi: { getFlag: () => undefined },
+		pi: { getFlag: (name: string) => flags[name] },
 		autofix: false,
 		deltaMode: true,
 		blockingOnly: false,
@@ -104,6 +107,49 @@ describe("ast-grep Sonar gap rules (integration via real runner)", () => {
 					"switch (v) { case 1: doA(); break; default: doB(); }\n",
 				),
 			).not.toContain("switch-without-default");
+		});
+	});
+
+	// Regression: tree-sitter parses BOTH `for...in` and `for...of` as
+	// `for_in_statement`, so the rule must constrain to the `in` operator or it
+	// false-positives on every (recommended) `for...of`.
+	describe("ts-in-operator-loop (for...in vs for...of)", () => {
+		it("flags a real for...in loop", async () => {
+			expect(
+				await rulesFiredOn("for (const k in obj) { use(k); }\n"),
+			).toContain("ts-in-operator-loop");
+		});
+		it("does NOT flag a for...of loop", async () => {
+			expect(
+				await rulesFiredOn("for (const v of arr) { use(v); }\n"),
+			).not.toContain("ts-in-operator-loop");
+		});
+	});
+
+	// #206: with the native rule engine on, matching is delegated to napi's
+	// findAll(rule). These assert parity — our shipped rules still fire correctly
+	// through the native path (pattern, kind, has, and the for...in/of distinction).
+	describe("native rule engine (#206, flag-gated)", () => {
+		const native = { "ast-grep-native-rules": true };
+		it("still flags a real for...in loop", async () => {
+			expect(
+				await rulesFiredOn("for (const k in obj) { use(k); }\n", native),
+			).toContain("ts-in-operator-loop");
+		});
+		it("still does NOT flag a for...of loop", async () => {
+			expect(
+				await rulesFiredOn("for (const v of arr) { use(v); }\n", native),
+			).not.toContain("ts-in-operator-loop");
+		});
+		it("still flags no-sort-without-comparator (has/pattern rule)", async () => {
+			expect(await rulesFiredOn("const r = arr.sort();\n", native)).toContain(
+				"no-sort-without-comparator",
+			);
+		});
+		it("does not flag a comparator-sorted call", async () => {
+			expect(
+				await rulesFiredOn("const r = arr.sort((a, b) => a - b);\n", native),
+			).not.toContain("no-sort-without-comparator");
 		});
 	});
 });

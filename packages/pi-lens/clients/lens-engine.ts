@@ -23,8 +23,13 @@ import { initLSPConfig } from "./lsp/config.js";
 import { getLSPService } from "./lsp/index.js";
 import { scanProjectDiagnostics } from "./project-diagnostics/scanner.js";
 import type { ProjectDiagnosticsSnapshot } from "./project-diagnostics/types.js";
+import type { ImpactHit } from "./review-graph/query.js";
+import type { ReviewGraphEdgeKind } from "./review-graph/types.js";
+import * as path from "node:path";
+import { normalizeMapKey } from "./path-utils.js";
 import { loadProjectSnapshot } from "./project-snapshot.js";
 import {
+	centralityFromReverseDeps,
 	deserializeWordIndex,
 	type RankedFile,
 	searchWordIndex,
@@ -123,11 +128,55 @@ export function symbolSearch(
 	cwd: string,
 	limit = 20,
 ): SymbolSearchResult {
-	const index = deserializeWordIndex(loadProjectSnapshot(cwd)?.wordIndex);
+	const snapshot = loadProjectSnapshot(cwd);
+	const index = deserializeWordIndex(snapshot?.wordIndex);
 	if (!index) return { available: false, query, results: [] };
+	// Boost well-connected files using the snapshot's reverse-dependency
+	// (importedBy) counts; snapshot keys are normalized, index keys are raw.
+	const centrality = centralityFromReverseDeps(
+		index,
+		snapshot?.reverseDeps,
+		(file) => normalizeMapKey(path.resolve(file)),
+	);
 	return {
 		available: true,
 		query,
-		results: searchWordIndex(index, query, { limit }),
+		results: searchWordIndex(index, query, { limit, centrality }),
 	};
+}
+
+export interface SymbolImpactResult {
+	/** False when the review graph is empty (no session scan has run). */
+	available: boolean;
+	seedFile: string;
+	hits: ImpactHit[];
+	truncated: boolean;
+	maxDepthReached: number;
+}
+
+/**
+ * Transitive, depth-bounded impact of a file ("what depends on this") over the
+ * review graph's call/reference/import edges (#162). Builds/loads the review
+ * graph (3-tier cached, so cheap after the first build) and walks incoming
+ * edges. Read-only.
+ */
+export async function symbolImpact(
+	file: string,
+	cwd: string,
+	options?: {
+		maxDepth?: number;
+		relations?: ReviewGraphEdgeKind[];
+		maxHits?: number;
+	},
+): Promise<SymbolImpactResult> {
+	const { buildOrUpdateGraph } = await import("./review-graph/builder.js");
+	const { computeTransitiveImpact } = await import("./review-graph/query.js");
+	const { FactStore } = await import("./dispatch/fact-store.js");
+	const graph = await buildOrUpdateGraph(cwd, [], new FactStore());
+	const result = computeTransitiveImpact(
+		graph,
+		path.resolve(cwd, file),
+		options,
+	);
+	return { available: graph.nodes.size > 0, ...result };
 }

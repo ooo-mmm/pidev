@@ -24,7 +24,7 @@
           npmDepsFetcherVersion = 2;
 
           # Updated by `nix run nixpkgs#prefetch-npm-deps -- ./package-lock.json`
-          npmDepsHash = "sha256-HO7w1pYTp0Bshng7pCkynWXQnCAT14YEY4b/b8wCjp0=";
+          npmDepsHash = "sha256-MMUKQ3NfsRa6CZ+Nz/PyWmpCc9kqY0gYaE9B7+f9L1I=";
 
           # Plugins are pi extensions; no build step required. Skip TS compile / tests.
           dontNpmBuild = true;
@@ -38,6 +38,10 @@
             runHook preInstall
             mkdir -p $out/lib
             cp -r node_modules $out/lib/node_modules
+            # Provided by the pi runtime; avoid version drift and singleton state breakage.
+            rm -rf $out/lib/node_modules/@earendil-works
+            # Clean broken .bin symlinks that pointed into @earendil-works.
+            find $out/lib/node_modules/.bin -type l -exec sh -c 'test -e "$1" || rm "$1"' _ {} \;
             # Workspace symlinks in node_modules point to ../../packages/<name>
             # so packages must live alongside node_modules under $out/lib/.
             cp -r packages $out/lib/packages
