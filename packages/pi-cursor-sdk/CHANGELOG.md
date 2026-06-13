@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.1.42-ooo.1 — pidev fork
+
+- Patch: install `uncaughtException` filter for Bun-vs-Cloudflare TLS race against `api2.cursor.sh`/`api.cursor.com`. Race surfaces as a socket 'error' event escaping `discoverModels()` try/catch, becoming uncaughtException that kills pi. Filter swallows only ECONNRESET against Cursor hosts; everything else rethrows.
+- Patch: wrap `Cursor.models.list` with 3-attempt exponential-backoff retry (250/500/1000ms) on the same TLS race signature, so warm boots still get the live catalog when the first ClientHello fails.
+- Source: github.com/ooo-mmm/pidev/packages/pi-cursor-sdk
+
 ## 0.1.42 - 2026-06-10
 
 ### Added
