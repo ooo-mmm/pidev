@@ -50,7 +50,7 @@ function installUncaughtFilter(): void {
 	});
 }
 
-async function withCursorRetry<T>(operation: () => Promise<T>, label: string): Promise<T> {
+async function withCursorRetry<T>(operation: () => Promise<T>): Promise<T> {
 	let lastError: unknown;
 	for (let attempt = 1; attempt <= RETRY_ATTEMPTS; attempt++) {
 		try {
@@ -66,8 +66,12 @@ async function withCursorRetry<T>(operation: () => Promise<T>, label: string): P
 }
 
 function wrapCursorSdk(sdk: CursorSdkModule): CursorSdkModule {
-	const originalList = sdk.Cursor.models.list;
-	sdk.Cursor.models.list = (options) => withCursorRetry(() => originalList(options), "Cursor.models.list");
+	// Cast to mutable: @cursor/sdk's emitted .d.ts declares Cursor.models as a
+	// frozen object literal; runtime is a normal mutable nested object so the
+	// assignment is safe but TS's strict view rejects it without the cast.
+	const models = sdk.Cursor.models as { list: typeof sdk.Cursor.models.list };
+	const originalList = models.list;
+	models.list = (options) => withCursorRetry(() => originalList(options));
 	return sdk;
 }
 
