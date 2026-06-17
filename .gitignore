@@ -3,6 +3,6 @@ dist/
 .turbo/
 *.log
 .DS_Store
-result
-result-*
+/result
+/result-*
 .npm/
