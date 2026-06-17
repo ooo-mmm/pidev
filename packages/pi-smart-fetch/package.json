@@ -45,7 +45,7 @@
   },
   "pi": {
     "extensions": [
-      "./dist/index.js"
+      "./src/index.ts"
     ],
     "image": "https://raw.githubusercontent.com/Thinkscape/agent-smart-fetch/master/packages/pi-smart-fetch/demo.gif"
   },
