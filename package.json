@@ -17,6 +17,10 @@
     "vitest": "^2.1.0"
   },
   "overrides": {
-    "tree-sitter-wasms": "npm:null@2.0.0"
+    "tree-sitter-wasms": "npm:null@2.0.0",
+    "@earendil-works/pi-coding-agent": "npm:null@2.0.0",
+    "@earendil-works/pi-agent-core": "npm:null@2.0.0",
+    "@earendil-works/pi-ai": "npm:null@2.0.0",
+    "@earendil-works/pi-tui": "npm:null@2.0.0"
   }
 }
