@@ -36,23 +36,15 @@
           # Output the resolved node_modules tree — pi reads this at runtime.
           installPhase = ''
             runHook preInstall
-            mkdir -p $out/lib/node_modules
-            # Copy external deps
-            cp -r node_modules/. $out/lib/node_modules/
-            # Replace workspace symlinks with real copies so pi autoload follows them
-            for link in $(find $out/lib/node_modules -maxdepth 2 -type l); do
-              target=$(readlink "$link")
-              # workspace links point to ../../packages/<name> relative to node_modules
-              real=$(cd "$(dirname "$link")" && realpath "$target" 2>/dev/null || true)
-              if [ -d "$real" ]; then
-                rm "$link"
-                cp -r "$real" "$link"
-              fi
-            done
+            mkdir -p $out/lib
+            cp -r node_modules $out/lib/node_modules
             # Provided by the pi runtime; avoid version drift and singleton state breakage.
             rm -rf $out/lib/node_modules/@earendil-works
             # Clean broken .bin symlinks that pointed into @earendil-works.
             find $out/lib/node_modules/.bin -type l -exec sh -c 'test -e "$1" || rm "$1"' _ {} \;
+            # Workspace symlinks in node_modules point to ../../packages/<name>
+            # so packages must live alongside node_modules under $out/lib/.
+            cp -r packages $out/lib/packages
             runHook postInstall
           '';
 
