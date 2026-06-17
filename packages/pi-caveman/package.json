@@ -1,7 +1,7 @@
 {
   "name": "pi-caveman",
   "version": "1.0.7",
-  "description": "Why use many token when few do trick. Caveman mode for pi \u2014 cuts ~75% output tokens while keeping full technical accuracy.",
+  "description": "Why use many token when few do trick. Caveman mode for pi — cuts ~75% output tokens while keeping full technical accuracy.",
   "keywords": [
     "pi-package",
     "pi-extension",
@@ -25,8 +25,5 @@
       "./extensions/caveman.ts"
     ],
     "image": "https://raw.githubusercontent.com/jonjonrankin/pi-caveman/main/pi-caveman.gif"
-  },
-  "peerDependencies": {
-    "@earendil-works/pi-coding-agent": "*"
   }
 }

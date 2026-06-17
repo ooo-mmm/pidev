@@ -46,16 +46,10 @@
     "@llamaindex/liteparse": "2.0.1"
   },
   "devDependencies": {
-    "@earendil-works/pi-ai": "0.74.0",
-    "@earendil-works/pi-coding-agent": "0.74.0",
     "@types/node": "^25.7.0",
     "oxfmt": "^0.49.0",
     "oxlint": "^1.64.0",
     "typescript": "^6.0.3"
-  },
-  "peerDependencies": {
-    "@earendil-works/pi-ai": "^0.74.0",
-    "@earendil-works/pi-coding-agent": "^0.74.0"
   },
   "engines": {
     "node": ">=20.6.0"

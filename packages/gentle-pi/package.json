@@ -50,19 +50,10 @@
       "./skills"
     ]
   },
-  "dependencies": {
-    "@earendil-works/pi-tui": "*"
-  },
-  "peerDependencies": {
-    "@earendil-works/pi-coding-agent": "*"
-  },
   "peerDependenciesMeta": {
     "@earendil-works/pi-coding-agent": {
       "optional": true
     }
-  },
-  "devDependencies": {
-    "@earendil-works/pi-coding-agent": "*"
   },
   "packageManager": "pnpm@11.1.1"
 }

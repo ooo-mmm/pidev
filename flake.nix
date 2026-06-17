@@ -24,7 +24,7 @@
           npmDepsFetcherVersion = 2;
 
           # Updated by `nix run nixpkgs#prefetch-npm-deps -- ./package-lock.json`
-          npmDepsHash = "sha256-FSzzF2QIlCeDPI+RJWYKtMhxgjCA/NC95Y3XpHisyqg=";
+          npmDepsHash = "sha256-CDKTOy9XZSI9KyfUTdaoeRBZ9kPnjcso4zpfKDbGzjY=";
 
           # Plugins are pi extensions; no build step required. Skip TS compile / tests.
           dontNpmBuild = true;

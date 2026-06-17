@@ -27,10 +27,6 @@
       "./skills"
     ]
   },
-  "peerDependencies": {
-    "@earendil-works/pi-coding-agent": "*",
-    "@earendil-works/pi-tui": "*"
-  },
   "dependencies": {
     "tsx": "^4.20.0",
     "typebox": "^1.1.24"
