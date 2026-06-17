@@ -192,8 +192,7 @@ export function getFinalOutput(messages: Message[]): string {
 			const hasAssistantError = ("errorMessage" in msg && typeof msg.errorMessage === "string" && msg.errorMessage.length > 0)
 				|| ("stopReason" in msg && msg.stopReason === "error");
 			if (hasAssistantError) continue;
-			for (let j = msg.content.length - 1; j >= 0; j--) {
-				const part = msg.content[j];
+			for (const part of msg.content) {
 				if (part.type === "text" && part.text.trim().length > 0) return part.text;
 			}
 		}
@@ -203,6 +202,13 @@ export function getFinalOutput(messages: Message[]): string {
 
 export function getSingleResultOutput(result: Pick<SingleResult, "finalOutput" | "messages">): string {
 	return result.finalOutput ?? getFinalOutput(result.messages ?? []);
+}
+
+export function formatResourceLimitExceeded(input: { agent: string; kind: "maxExecutionTimeMs" | "maxTokens"; limit: number; observed?: number }): string {
+	if (input.kind === "maxExecutionTimeMs") {
+		return `Resource limit exceeded for ${input.agent}: maxExecutionTimeMs ${input.limit}ms.`;
+	}
+	return `Resource limit exceeded for ${input.agent}: maxTokens ${input.limit}${input.observed !== undefined ? ` (observed ${input.observed})` : ""}.`;
 }
 
 /**
